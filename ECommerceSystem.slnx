@@ -1,5 +1,5 @@
 <Solution>
-  <Project Path="ECommerce  System/ECommerce  System.csproj" />
+  <Project Path="ECommerce  System/ECommerce.API.csproj" />
   <Project Path="ECommerce.Application/ECommerce.Application.csproj" />
   <Project Path="ECommerce.Domain/ECommerce.Domain.csproj" />
   <Project Path="ECommerce.Infrastructure/ECommerce.Infrastructure.csproj" />
