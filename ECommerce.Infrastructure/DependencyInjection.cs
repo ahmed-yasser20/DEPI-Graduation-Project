@@ -58,6 +58,7 @@ namespace ECommerce.Infrastructure
             services.AddScoped<ICustomerRepository, CustomerRepository>();
             services.AddScoped<IUnitOfWork, UnitOfWork>();
             services.AddScoped<IAuthservice, AuthService>();
+            services.AddScoped<IProductService, ProductService>();
 
             return services;
         }
