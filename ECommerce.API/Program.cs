@@ -44,6 +44,8 @@ namespace ECommerce.API
             var app = builder.Build();
 
             app.UseMiddleware<GlobalExceptionMiddleware>();
+            app.UseMiddleware<LoggingMiddleware>();
+
 
             app.UseSwagger();
             app.UseSwaggerUI();

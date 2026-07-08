@@ -51,6 +51,7 @@ namespace ECommerce.Infrastructure
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IProductRepository, ProductRepository>();
+            services.AddScoped<ICartService, CartService>();
             services.AddScoped<IOrderRepository, OrderRepository>();
             services.AddScoped<IOrderProductsRepository, OrderProductsRepository>();
             services.AddScoped<IShoppingCartRepository, ShoppingCartRepository>();
