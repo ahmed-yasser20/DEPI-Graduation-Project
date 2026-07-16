@@ -51,5 +51,12 @@ namespace ECommerce.Infrastructure.Repositories
                 .Include(p => p.Category)
                 .FirstOrDefaultAsync(p => p.PId == productId);
         }
+        public async Task ReduceStockAsync(int productId, int quantity)
+        {
+            var product = await _context.Products.FindAsync(productId);
+            if (product == null) return;
+
+            product.Stock = Math.Max(0, product.Stock - quantity);
+        }
     }
 }

@@ -85,5 +85,26 @@ namespace ECommerce.API.Controllers
             await _productService.DeleteAsync(id);
             return NoContent();
         }
+        [HttpPost("{id:int}/image")]
+        [Authorize(Roles = "Admin")]
+        [RequestSizeLimit(5 * 1024 * 1024)]
+        public async Task<ActionResult<ProductResponseDto>> UploadImage(int id, IFormFile file)
+        {
+            if (file is null || file.Length == 0)
+                return BadRequest("No file uploaded.");
+
+            await using var stream = file.OpenReadStream();
+            var result = await _productService.UploadImageAsync(id, stream, file.FileName, file.ContentType, file.Length);
+            return Ok(result);
+        }
+
+        [HttpDelete("{id:int}/image")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<ProductResponseDto>> DeleteImage(int id)
+        {
+            var result = await _productService.DeleteImageAsync(id);
+            return Ok(result);
+        }
+
     }
 }

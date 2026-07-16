@@ -1,6 +1,9 @@
+using Amazon.S3;
 using ECommerce.Application.Interfaces;
 using ECommerce.Application.Services;
+using ECommerce.Domain.Entities;
 using ECommerce.Infrastructure.Data;
+using ECommerce.Infrastructure.External_Services;
 using ECommerce.Infrastructure.Repositories;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
@@ -9,7 +12,6 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.IdentityModel.Tokens;
 using System.Text;
-using ECommerce.Domain.Entities;
 
 namespace ECommerce.Infrastructure
 {
@@ -47,7 +49,20 @@ namespace ECommerce.Infrastructure
                         Encoding.UTF8.GetBytes(configuration["JWT:Key"]!))
                 };
             });
+            services.Configure<R2StorageOptions>(configuration.GetSection("R2"));
 
+            services.AddSingleton<IAmazonS3>(sp =>
+            {
+                var options = configuration.GetSection("R2").Get<R2StorageOptions>()!;
+                var config = new AmazonS3Config
+                {
+                    ServiceURL = $"https://{options.AccountId}.r2.cloudflarestorage.com",
+                    ForcePathStyle = true
+                };
+                return new AmazonS3Client(options.AccessKey, options.SecretKey, config);
+            });
+
+            services.AddScoped<IFileStorageService, R2StorageService>();
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IProductRepository, ProductRepository>();

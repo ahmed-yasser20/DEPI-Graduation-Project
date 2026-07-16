@@ -15,6 +15,9 @@ namespace ECommerce.Infrastructure.Configrations
 
             builder.HasKey(p => p.PId);
 
+            builder.Property(p => p.ImageKey)
+                .HasMaxLength(300);
+
             builder.Property(p => p.PId)
                 .ValueGeneratedOnAdd();
 

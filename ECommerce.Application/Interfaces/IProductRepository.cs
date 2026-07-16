@@ -13,5 +13,6 @@ namespace ECommerce.Application.Interfaces
         Task<IEnumerable<Product>> GetInStockAsync();
         Task<IEnumerable<Product>> SearchByNameAsync(string keyword);
         Task<Product?> GetWithCategoryAsync(int productId);
+        Task ReduceStockAsync(int productId, int quantity);
     }
 }

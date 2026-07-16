@@ -17,5 +17,7 @@ namespace ECommerce.Application.Interfaces
         Task<ProductResponseDto> CreateAsync(CreateProductDto dto);
         Task<ProductResponseDto> UpdateAsync(int id, UpdateProductDto dto);
         Task DeleteAsync(int id);
+        Task<ProductResponseDto> UploadImageAsync(int id, Stream fileStream, string fileName, string contentType, long fileLength);
+        Task<ProductResponseDto> DeleteImageAsync(int id);
     }
 }

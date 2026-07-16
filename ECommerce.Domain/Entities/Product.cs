@@ -8,6 +8,7 @@ namespace ECommerce.Domain.Entities
         public decimal Price { get; set; }
         public string Description { get; set; } = string.Empty;
         public int Stock { get; set; }
+        public string? ImageKey { get; set; }   // NEW - R2 object key, e.g. "products/{guid}.jpg"
 
         public Category? Category { get; set; }
         public ICollection<Order_Products> OrderProducts { get; set; } = new List<Order_Products>();

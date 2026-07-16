@@ -70,9 +70,16 @@ namespace ECommerce.Application.Services
             payment.Payment_Method = paymentMethodType;
             payment.Paid_At = DateTime.UtcNow;
 
-            var order = await _unitOfWork.Orders.GetByIdAsync(payment.OId);
+            var order = await _unitOfWork.Orders.GetWithDetailsAsync(payment.OId);
             if (order != null)
+            {
                 order.Status = OrderStatus.Paid;
+
+                foreach (var item in order.OrderProducts)
+                {
+                    await _unitOfWork.Products.ReduceStockAsync(item.PId, item.Quantity);
+                }
+            }
 
             await _unitOfWork.SaveChangesAsync();
             return MapToDto(payment);
