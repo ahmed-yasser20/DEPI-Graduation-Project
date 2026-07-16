@@ -49,6 +49,13 @@ namespace ECommerce.Infrastructure
                         Encoding.UTF8.GetBytes(configuration["JWT:Key"]!))
                 };
             });
+            services.AddCors(options =>
+            {
+                options.AddPolicy("AllowFrontend", policy =>
+                    policy.WithOrigins("http://localhost:8080")
+                          .AllowAnyHeader()
+                          .AllowAnyMethod());
+            });
             services.Configure<R2StorageOptions>(configuration.GetSection("R2"));
 
             services.AddSingleton<IAmazonS3>(sp =>
@@ -63,6 +70,7 @@ namespace ECommerce.Infrastructure
             });
 
             services.AddScoped<IFileStorageService, R2StorageService>();
+            services.AddScoped<ICustomerService, CustomerService>();
             services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
             services.AddScoped<ICategoryRepository, CategoryRepository>();
             services.AddScoped<IProductRepository, ProductRepository>();
