@@ -9,6 +9,7 @@ import { useCart } from "@/context/CartContext";
 import { useEffect, useState } from "react";
 import { orderService, type FrontendOrder } from "@/services/orderService";
 import { fmt, formatDate } from "@/lib/format";
+import { StatusBadge } from "@/components/StatusBadge";
 import { toast } from "sonner";
 
 export const Route = createFileRoute("/profile")({ component: ProfilePage });
@@ -123,7 +124,8 @@ function ProfilePage() {
                 <div key={o.id} className="rounded-lg border p-4">
                   <p className="text-xs text-muted-foreground">{o.id}</p>
                   <p className="mt-1 font-medium">{fmt(o.total)}</p>
-                  <p className="mt-1 text-xs text-muted-foreground">{formatDate(o.date)} · {o.status}</p>
+                  <p className="mt-1 text-xs text-muted-foreground">{formatDate(o.date)}</p>
+                  <div className="mt-2"><StatusBadge status={o.status} /></div>
                 </div>
               ))}
             </div>

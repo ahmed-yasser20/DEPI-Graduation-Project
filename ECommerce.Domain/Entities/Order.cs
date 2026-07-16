@@ -22,7 +22,7 @@ namespace ECommerce.Domain.Entities
     {
         Pending,
         AwaitingPayment,
-        Paid,
+        Paid,   
         Failed,
         Processing,
         Shipped,

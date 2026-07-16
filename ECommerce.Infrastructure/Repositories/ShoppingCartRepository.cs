@@ -14,6 +14,9 @@ namespace ECommerce.Infrastructure.Repositories
 
         public void ClearItems(Shopping_Cart cart)
         {
+            foreach (var item in cart.CartItems)
+                item.Product = null;
+
             _context.CartItems.RemoveRange(cart.CartItems);
         }
 

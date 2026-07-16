@@ -10,6 +10,7 @@ export function mapProduct(p: ProductResponse): Product {
     name: p.pName,
     price: p.price,
     category: p.category_Name || "",
+    categoryId: p.categoryId ?? undefined,
     stock: p.stock,
     image: p.imageUrl || FALLBACK_IMAGE,
     description: p.description || "",

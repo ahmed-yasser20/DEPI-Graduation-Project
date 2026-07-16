@@ -6,29 +6,9 @@ import { orderService } from "@/services/orderService";
 import { fmt, formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Loader, EmptyState } from "@/components/Loader";
+import { StatusBadge } from "@/components/StatusBadge";
 
 export const Route = createFileRoute("/orders")({ component: OrdersPage });
-
-const STAGES = ["Pending", "Confirmed", "Processing", "Shipped", "Delivered"];
-
-function StatusBar({ status }: { status: string }) {
-  if (status === "Cancelled") {
-    return <span className="inline-flex items-center gap-1.5 text-xs text-destructive"><span className="h-2 w-2 rounded-full bg-destructive" />Cancelled</span>;
-  }
-  const idx = STAGES.indexOf(status);
-  return (
-    <div className="mt-3">
-      <div className="flex gap-1">
-        {STAGES.map((s, i) => (
-          <div key={s} className={`h-1 flex-1 rounded-full ${i <= idx ? "bg-foreground" : "bg-muted"}`} />
-        ))}
-      </div>
-      <div className="mt-2 flex justify-between text-[10px] uppercase tracking-wider text-muted-foreground">
-        {STAGES.map((s) => <span key={s} className={s === status ? "text-foreground font-semibold" : ""}>{s}</span>)}
-      </div>
-    </div>
-  );
-}
 
 function OrdersPage() {
   const { isAuthenticated } = useProtected();
@@ -71,7 +51,9 @@ function OrdersPage() {
                       <p className="font-semibold">{fmt(o.total)}</p>
                     </div>
                   </div>
-                  <StatusBar status={o.status} />
+                  <div className="mt-3">
+                    <StatusBadge status={o.status} />
+                  </div>
                 </div>
               ))}
             </div>

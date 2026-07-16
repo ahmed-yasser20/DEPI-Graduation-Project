@@ -16,6 +16,13 @@ import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "@/components/ui/s
 
 export const Route = createFileRoute("/")({ component: Home });
 
+// Rounds a raw max price up to a clean slider bound (e.g. 289 -> 300, 1450 -> 1500).
+function roundUpToNiceMax(n: number) {
+  if (n <= 0) return 100;
+  const magnitude = Math.pow(10, Math.floor(Math.log10(n)) - 1);
+  return Math.ceil(n / magnitude) * magnitude;
+}
+
 function Home() {
   const [products, setProducts] = useState<Product[] | null>(null);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -23,6 +30,7 @@ function Home() {
   const [selected, setSelected] = useState<Product | null>(null);
   const { add } = useCart();
   const gridRef = useRef<HTMLDivElement>(null);
+  const priceRangeInitialized = useRef(false);
 
   const [filters, setFilters] = useState<FilterState>({
     category: null,
@@ -30,6 +38,11 @@ function Home() {
     inStockOnly: false,
     sort: "featured",
   });
+
+  const maxPrice = useMemo(() => {
+    if (!products || products.length === 0) return 300;
+    return roundUpToNiceMax(Math.max(...products.map((p) => p.price)));
+  }, [products]);
 
   useEffect(() => {
     productService.list().then(setProducts).catch(() => {
@@ -39,10 +52,19 @@ function Home() {
     productService.categories().then(setCategories).catch(() => setCategories([]));
   }, []);
 
+  // Once we know the real max price, expand the slider's default range to match -
+  // but only the first time, so we don't clobber a range the user already adjusted.
+  useEffect(() => {
+    if (!priceRangeInitialized.current && products && products.length > 0) {
+      priceRangeInitialized.current = true;
+      setFilters((f) => ({ ...f, price: [0, maxPrice] }));
+    }
+  }, [products, maxPrice]);
+
   const filtered = useMemo(() => {
     if (!products) return [];
     let list = [...products];
-    if (filters.category) list = list.filter((p) => p.category === filters.category);
+    if (filters.category) list = list.filter((p) => p.categoryId === filters.category);
     list = list.filter((p) => p.price >= filters.price[0] && p.price <= filters.price[1]);
     if (filters.inStockOnly) list = list.filter((p) => p.stock > 0);
     if (query.trim()) {
@@ -79,11 +101,11 @@ function Home() {
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
           {categories.map((c) => {
-            const active = filters.category === c.id;
+            const active = filters.category === c.categoryId;
             return (
               <button
                 key={c.id}
-                onClick={() => { setFilters({ ...filters, category: active ? null : c.id }); scrollToGrid(); }}
+                onClick={() => { setFilters({ ...filters, category: active ? null : c.categoryId }); scrollToGrid(); }}
                 className={`group relative aspect-[4/5] rounded-xl border overflow-hidden text-left transition-all hover:shadow-elevated ${active ? "border-foreground" : ""}`}
               >
                 <div className="absolute inset-0 bg-gradient-to-br from-muted to-secondary transition-transform duration-500 group-hover:scale-105" />
@@ -122,7 +144,7 @@ function Home() {
               </SheetTrigger>
               <SheetContent side="left" className="w-80 p-6">
                 <SheetTitle className="mb-6">Filters</SheetTitle>
-                <Filters value={filters} onChange={setFilters} categories={categories} />
+                <Filters value={filters} onChange={setFilters} categories={categories} maxPrice={maxPrice} />
               </SheetContent>
             </Sheet>
           </div>
@@ -130,7 +152,7 @@ function Home() {
 
         <div className="grid lg:grid-cols-[220px_1fr] gap-10">
           <div className="hidden lg:block">
-            <Filters value={filters} onChange={setFilters} categories={categories} />
+            <Filters value={filters} onChange={setFilters} categories={categories} maxPrice={maxPrice} />
           </div>
 
           <div>
@@ -142,7 +164,7 @@ function Home() {
               <EmptyState
                 title="No products match"
                 description="Try changing your filters or clearing the search."
-                action={<Button variant="outline" onClick={() => { setQuery(""); setFilters({ category: null, price: [0, 300], inStockOnly: false, sort: "featured" }); }}>Reset filters</Button>}
+                action={<Button variant="outline" onClick={() => { setQuery(""); setFilters({ category: null, price: [0, maxPrice], inStockOnly: false, sort: "featured" }); }}>Reset filters</Button>}
               />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">

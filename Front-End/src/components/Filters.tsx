@@ -4,13 +4,13 @@ import { Checkbox } from "@/components/ui/checkbox";
 import type { Category } from "@/services/productService";
 
 export interface FilterState {
-  category: string | null;
+  category: number | null;
   price: [number, number];
   inStockOnly: boolean;
   sort: "featured" | "price-asc" | "price-desc";
 }
 
-export function Filters({ value, onChange, categories }: { value: FilterState; onChange: (f: FilterState) => void; categories: Category[] }) {
+export function Filters({ value, onChange, categories, maxPrice = 300 }: { value: FilterState; onChange: (f: FilterState) => void; categories: Category[]; maxPrice?: number }) {
   return (
     <aside className="sticky top-24 space-y-8 text-sm">
       <div>
@@ -25,8 +25,8 @@ export function Filters({ value, onChange, categories }: { value: FilterState; o
           {categories.map((c) => (
             <button
               key={c.id}
-              onClick={() => onChange({ ...value, category: c.id })}
-              className={`block w-full text-left py-1.5 px-2 rounded-md hover:bg-muted transition-colors ${value.category === c.id ? "bg-muted font-medium" : "text-muted-foreground"}`}
+              onClick={() => onChange({ ...value, category: c.categoryId })}
+              className={`block w-full text-left py-1.5 px-2 rounded-md hover:bg-muted transition-colors ${value.category === c.categoryId ? "bg-muted font-medium" : "text-muted-foreground"}`}
             >
               {c.name}
             </button>
@@ -38,8 +38,8 @@ export function Filters({ value, onChange, categories }: { value: FilterState; o
         <h4 className="mb-3 font-semibold uppercase tracking-widest text-xs">Price</h4>
         <Slider
           min={0}
-          max={300}
-          step={5}
+          max={maxPrice}
+          step={Math.max(1, Math.round(maxPrice / 60))}
           value={value.price}
           onValueChange={(v) => onChange({ ...value, price: [v[0], v[1]] as [number, number] })}
         />
