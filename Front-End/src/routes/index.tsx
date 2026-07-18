@@ -36,6 +36,7 @@ function Home() {
     category: null,
     price: [0, 300],
     inStockOnly: false,
+    minRating: 0,
     sort: "featured",
   });
 
@@ -67,12 +68,15 @@ function Home() {
     if (filters.category) list = list.filter((p) => p.categoryId === filters.category);
     list = list.filter((p) => p.price >= filters.price[0] && p.price <= filters.price[1]);
     if (filters.inStockOnly) list = list.filter((p) => p.stock > 0);
+    if (filters.minRating > 0) list = list.filter((p) => p.averageRating >= filters.minRating);
     if (query.trim()) {
       const q = query.toLowerCase();
       list = list.filter((p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q));
     }
     if (filters.sort === "price-asc") list.sort((a, b) => a.price - b.price);
     if (filters.sort === "price-desc") list.sort((a, b) => b.price - a.price);
+    if (filters.sort === "rating-desc")
+      list.sort((a, b) => b.averageRating - a.averageRating || b.ratingCount - a.ratingCount);
     return list;
   }, [products, filters, query]);
 
@@ -164,7 +168,7 @@ function Home() {
               <EmptyState
                 title="No products match"
                 description="Try changing your filters or clearing the search."
-                action={<Button variant="outline" onClick={() => { setQuery(""); setFilters({ category: null, price: [0, maxPrice], inStockOnly: false, sort: "featured" }); }}>Reset filters</Button>}
+                action={<Button variant="outline" onClick={() => { setQuery(""); setFilters({ category: null, price: [0, maxPrice], inStockOnly: false, minRating: 0, sort: "featured" }); }}>Reset filters</Button>}
               />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">

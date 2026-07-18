@@ -43,6 +43,9 @@ function AdminPage() {
   const [busy, setBusy] = useState(true);
   const [productForm, setProductForm] = useState<ProductPayload>(emptyProduct);
   const [editingProduct, setEditingProduct] = useState<number | null>(null);
+  const [editingProductImageUrl, setEditingProductImageUrl] = useState<string | null>(null);
+  const [imageUploading, setImageUploading] = useState(false);
+  const [imageDeleting, setImageDeleting] = useState(false);
   const [productDialog, setProductDialog] = useState(false);
   const [categoryName, setCategoryName] = useState("");
   const [editingCategory, setEditingCategory] = useState<number | null>(null);
@@ -277,6 +280,7 @@ function AdminPage() {
 
   const openProduct = (product?: ProductResponse) => {
     setEditingProduct(product?.pId ?? null);
+    setEditingProductImageUrl(product?.imageUrl ?? null);
     setProductForm(
       product
         ? {
@@ -297,12 +301,51 @@ function AdminPage() {
       return;
     }
     try {
-      await adminService.saveProduct(productForm, editingProduct ?? undefined);
-      toast.success(editingProduct ? "Product updated" : "Product created");
-      setProductDialog(false);
+      const saved = await adminService.saveProduct(productForm, editingProduct ?? undefined);
+      const wasNew = editingProduct === null;
+      toast.success(wasNew ? "Product created" : "Product updated");
+      if (wasNew) {
+        // Keep the dialog open and switch into "editing" mode using the newly
+        // created product's id, so the admin can immediately attach an image
+        // without closing and reopening the dialog.
+        setEditingProduct(saved.pId);
+        setEditingProductImageUrl(saved.imageUrl ?? null);
+      } else {
+        setProductDialog(false);
+      }
       await load();
     } catch (error: unknown) {
       toast.error(error instanceof Error ? error.message : "Couldn't save product");
+    }
+  };
+
+  const uploadImage = async (file: File) => {
+    if (!editingProduct) return;
+    setImageUploading(true);
+    try {
+      const updated = await adminService.uploadProductImage(editingProduct, file);
+      setEditingProductImageUrl(updated.imageUrl ?? null);
+      toast.success("Image uploaded");
+      await load();
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Couldn't upload image");
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
+  const deleteImage = async () => {
+    if (!editingProduct) return;
+    setImageDeleting(true);
+    try {
+      const updated = await adminService.deleteProductImage(editingProduct);
+      setEditingProductImageUrl(updated.imageUrl ?? null);
+      toast.success("Image removed");
+      await load();
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : "Couldn't remove image");
+    } finally {
+      setImageDeleting(false);
     }
   };
 
@@ -432,7 +475,9 @@ function AdminPage() {
                   </Button>
                 )}
                 <p className="ml-auto text-sm text-muted-foreground">
-                  {filteredProducts.length} of {products.length} products
+                  Showing {filteredProducts.length === 0 ? 0 : (page - 1) * pageSize + 1}
+                  –{Math.min(page * pageSize, filteredProducts.length)} of {filteredProducts.length}
+                  {filteredProducts.length !== products.length ? ` (filtered from ${products.length})` : ""}
                 </p>
                 <Button onClick={() => openProduct()}>
                   <Plus className="mr-2 h-4 w-4" />
@@ -880,7 +925,17 @@ function AdminPage() {
           </Tabs>
         )}
       </main>
-      <Dialog open={productDialog} onOpenChange={setProductDialog}>
+      <Dialog
+        open={productDialog}
+        onOpenChange={(open) => {
+          setProductDialog(open);
+          if (!open) {
+            setEditingProductImageUrl(null);
+            setImageUploading(false);
+            setImageDeleting(false);
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>{editingProduct ? "Edit product" : "Add product"}</DialogTitle>
@@ -958,6 +1013,52 @@ function AdminPage() {
                 }
                 className="mt-1.5"
               />
+            </div>
+            <div>
+              <Label>Image</Label>
+              {!editingProduct ? (
+                <p className="mt-1.5 text-sm text-muted-foreground">
+                  Save the product first - you'll be able to add an image right after.
+                </p>
+              ) : (
+                <div className="mt-1.5 space-y-3">
+                  {editingProductImageUrl && (
+                    <img
+                      src={editingProductImageUrl}
+                      alt={productForm.pName || "Product image"}
+                      className="h-32 w-32 rounded-lg border object-cover"
+                    />
+                  )}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      disabled={imageUploading}
+                      onChange={(event) => {
+                        const file = event.target.files?.[0];
+                        if (file) void uploadImage(file);
+                        event.target.value = "";
+                      }}
+                      className="max-w-xs"
+                    />
+                    {imageUploading && (
+                      <span className="text-sm text-muted-foreground">Uploading…</span>
+                    )}
+                    {editingProductImageUrl && !imageUploading && (
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        disabled={imageDeleting}
+                        onClick={deleteImage}
+                      >
+                        {imageDeleting ? "Removing…" : "Remove image"}
+                      </Button>
+                    )}
+                  </div>
+                  <p className="text-xs text-muted-foreground">JPG, PNG, or WebP, up to 5MB.</p>
+                </div>
+              )}
             </div>
             <Button onClick={saveProduct}>
               {editingProduct ? "Save changes" : "Create product"}

@@ -23,6 +23,24 @@ export const adminService = {
   async deleteProduct(id: number) {
     await api.delete(`/Product/${id}`);
   },
+  // The backend expects multipart/form-data with a "file" field (see
+  // ProductController.UploadImage). We explicitly unset the JSON Content-Type
+  // the api client sets by default - if left as "application/json" or hardcoded
+  // to "multipart/form-data" without a boundary, the request body won't parse
+  // correctly server-side. Setting it to undefined lets the browser generate
+  // the correct header (including the multipart boundary) itself.
+  async uploadProductImage(id: number, file: File) {
+    const form = new FormData();
+    form.append("file", file);
+    const { data } = await api.post<ProductResponse>(`/Product/${id}/image`, form, {
+      headers: { "Content-Type": undefined },
+    });
+    return data;
+  },
+  async deleteProductImage(id: number) {
+    const { data } = await api.delete<ProductResponse>(`/Product/${id}/image`);
+    return data;
+  },
   async listCategories() {
     const { data } = await api.get<CategoryResponse[]>("/Category");
     return data;
