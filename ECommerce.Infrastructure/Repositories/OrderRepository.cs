@@ -34,8 +34,22 @@ namespace ECommerce.Infrastructure.Repositories
         public async Task<IEnumerable<Order>> GetAllWithDetailsAsync()
         {
             return await _context.Orders
+                .Include(o => o.Customer)
                 .Include(o => o.OrderProducts)
                     .ThenInclude(op => op.Product)
+                .ToListAsync();
+        }
+
+        public async Task<IEnumerable<Order>> GetUnpaidWithDetailsByCustomerAsync(string customerId)
+        {
+            return await _context.Orders
+                .Include(o => o.OrderProducts)
+                    .ThenInclude(op => op.Product)
+                .Where(o => o.CId == customerId &&
+                    (o.Status == OrderStatus.Pending ||
+                     o.Status == OrderStatus.AwaitingPayment ||
+                     o.Status == OrderStatus.Failed))
+                .OrderByDescending(o => o.Created_At)
                 .ToListAsync();
         }
     }

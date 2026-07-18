@@ -13,5 +13,6 @@ namespace ECommerce.Domain.Entities
         public string? CartId { get; set; }
         public Shopping_Cart? Cart { get; set; }
         public ICollection<Order> Orders { get; set; } = new List<Order>();
+        public ICollection<Rating> Ratings { get; set; } = new List<Rating>();
     }
 }

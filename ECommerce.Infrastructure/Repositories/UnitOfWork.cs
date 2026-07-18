@@ -16,6 +16,7 @@ namespace ECommerce.Infrastructure.Repositories
         private ICartItemsRepository? _cartItems;
         private ICustomerRepository? _customers;
         private IPaymentRepository? _payments;
+        private IRatingRepository? _ratings;
 
         public UnitOfWork(AppDbContext context)
         {
@@ -45,6 +46,8 @@ namespace ECommerce.Infrastructure.Repositories
 
         public IPaymentRepository Payments =>
             _payments ??= new PaymentRepository(_context);
+        public IRatingRepository Ratings =>
+            _ratings ??= new RatingRepository(_context);
 
         public async Task<int> SaveChangesAsync()
         {

@@ -314,6 +314,44 @@ namespace ECommerce.Infrastructure.Migrations
                     b.ToTable("Product", (string)null);
                 });
 
+            modelBuilder.Entity("ECommerce.Domain.Entities.Rating", b =>
+                {
+                    b.Property<int>("RId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("RId"));
+
+                    b.Property<string>("CId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<string>("Comment")
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<DateTime>("Created_At")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("PId")
+                        .HasColumnType("int");
+
+                    b.Property<DateTime?>("Updated_At")
+                        .HasColumnType("datetime2");
+
+                    b.Property<int>("Value")
+                        .HasColumnType("int");
+
+                    b.HasKey("RId");
+
+                    b.HasIndex("CId");
+
+                    b.HasIndex("PId", "CId")
+                        .IsUnique();
+
+                    b.ToTable("Rating", (string)null);
+                });
+
             modelBuilder.Entity("ECommerce.Domain.Entities.Shopping_Cart", b =>
                 {
                     b.Property<string>("CartId")
@@ -538,6 +576,25 @@ namespace ECommerce.Infrastructure.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("ECommerce.Domain.Entities.Rating", b =>
+                {
+                    b.HasOne("ECommerce.Domain.Entities.AppUser", "Customer")
+                        .WithMany("Ratings")
+                        .HasForeignKey("CId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("ECommerce.Domain.Entities.Product", "Product")
+                        .WithMany("Ratings")
+                        .HasForeignKey("PId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Customer");
+
+                    b.Navigation("Product");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -592,6 +649,8 @@ namespace ECommerce.Infrastructure.Migrations
             modelBuilder.Entity("ECommerce.Domain.Entities.AppUser", b =>
                 {
                     b.Navigation("Orders");
+
+                    b.Navigation("Ratings");
                 });
 
             modelBuilder.Entity("ECommerce.Domain.Entities.Category", b =>
@@ -611,6 +670,8 @@ namespace ECommerce.Infrastructure.Migrations
                     b.Navigation("CartItems");
 
                     b.Navigation("OrderProducts");
+
+                    b.Navigation("Ratings");
                 });
 
             modelBuilder.Entity("ECommerce.Domain.Entities.Shopping_Cart", b =>

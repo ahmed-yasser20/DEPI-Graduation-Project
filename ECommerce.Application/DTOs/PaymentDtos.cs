@@ -15,6 +15,8 @@ namespace ECommerce.Application.DTOs
         public string ClientSecret { get; set; } = string.Empty;
         public string PaymentIntentId { get; set; } = string.Empty;
         public decimal Amount { get; set; }
+        public string Status { get; set; } = string.Empty;
+        public string? PaymentMethodType { get; set; }
     }
 
     public class PaymentResponseDto

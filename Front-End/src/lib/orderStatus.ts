@@ -13,6 +13,7 @@ export interface StatusMeta {
 const STATUS_MAP: Record<string, StatusMeta> = {
   Pending: { label: "Pending", color: "grey" },
   AwaitingPayment: { label: "Waiting Payment", color: "yellow" },
+  AwaitingDelivery: { label: "Awaiting Delivery", color: "yellow" },
   Paid: { label: "Paid", color: "green" },
   Failed: { label: "Failed", color: "red" },
   Processing: { label: "Processing", color: "blue" },
@@ -23,6 +24,15 @@ const STATUS_MAP: Record<string, StatusMeta> = {
 
 export function getStatusMeta(status: string): StatusMeta {
   return STATUS_MAP[status] || { label: status, color: "grey" };
+}
+
+// Pipeline order (Pending -> ... -> Paid/Failed/Cancelled) used for sorting orders by status
+// in a way that's more meaningful than plain alphabetical.
+export const STATUS_ORDER = Object.keys(STATUS_MAP);
+
+export function getStatusRank(status: string): number {
+  const index = STATUS_ORDER.indexOf(status);
+  return index === -1 ? STATUS_ORDER.length : index;
 }
 
 export const STATUS_COLOR_CLASSES: Record<StatusColor, { dot: string; text: string; bg: string }> = {

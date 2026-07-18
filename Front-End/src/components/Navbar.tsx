@@ -1,6 +1,6 @@
 import { Link, useNavigate, useRouter } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Menu, ShoppingBag, User, X } from "lucide-react";
+import { LayoutDashboard, Menu, ShoppingBag, User, X } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { useCart } from "@/context/CartContext";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 
 export function Navbar() {
-  const { isAuthenticated, user, logout } = useAuth();
+  const { isAuthenticated, isAdmin, user, logout } = useAuth();
   const { count } = useCart();
   const [open, setOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -42,12 +42,19 @@ export function Navbar() {
   return (
     <header
       className={`sticky top-0 z-50 w-full border-b transition-all ${
-        scrolled ? "bg-background/85 backdrop-blur-md border-border" : "bg-background border-transparent"
+        scrolled
+          ? "bg-background/85 backdrop-blur-md border-border"
+          : "bg-background border-transparent"
       }`}
     >
       <div className="container-page flex h-16 items-center gap-6">
-        <Link to="/" className="flex items-center gap-2 font-display text-xl font-bold tracking-tight">
-          <span className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground">M</span>
+        <Link
+          to="/"
+          className="flex items-center gap-2 font-display text-xl font-bold tracking-tight"
+        >
+          <span className="grid h-8 w-8 place-items-center rounded-md bg-primary text-primary-foreground">
+            M
+          </span>
           <span>MONO</span>
         </Link>
 
@@ -70,7 +77,10 @@ export function Navbar() {
         </nav>
 
         <div className="ml-auto flex items-center gap-2">
-          <Link to="/cart" className="relative inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-muted transition-colors">
+          <Link
+            to="/cart"
+            className="relative inline-flex h-9 w-9 items-center justify-center rounded-md hover:bg-muted transition-colors"
+          >
             <ShoppingBag className="h-5 w-5" />
             {count > 0 && (
               <span className="absolute -top-1 -right-1 grid h-5 min-w-[1.25rem] place-items-center rounded-full bg-primary px-1 text-[10px] font-semibold text-primary-foreground">
@@ -87,16 +97,37 @@ export function Navbar() {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-48">
-                <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>Profile</DropdownMenuItem>
-                <DropdownMenuItem onClick={() => navigate({ to: "/orders" })}>Orders</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
+                  Profile
+                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => navigate({ to: "/orders" })}>
+                  Orders
+                </DropdownMenuItem>
+                {isAdmin && (
+                  <DropdownMenuItem onClick={() => navigate({ to: "/admin" })}>
+                    <LayoutDashboard className="mr-2 h-4 w-4" />
+                    Admin dashboard
+                  </DropdownMenuItem>
+                )}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={() => { logout(); navigate({ to: "/" }); }}>Logout</DropdownMenuItem>
+                <DropdownMenuItem
+                  onClick={() => {
+                    logout();
+                    navigate({ to: "/" });
+                  }}
+                >
+                  Logout
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           ) : (
             <div className="hidden sm:flex items-center gap-2">
-              <Button asChild variant="ghost" size="sm"><Link to="/login">Login</Link></Button>
-              <Button asChild size="sm"><Link to="/register">Register</Link></Button>
+              <Button asChild variant="ghost" size="sm">
+                <Link to="/login">Login</Link>
+              </Button>
+              <Button asChild size="sm">
+                <Link to="/register">Register</Link>
+              </Button>
             </div>
           )}
 
@@ -118,7 +149,10 @@ export function Navbar() {
                 key={l.to}
                 href={l.to}
                 onClick={(e) => {
-                  if (!l.to.includes("#")) { e.preventDefault(); navigate({ to: l.to }); }
+                  if (!l.to.includes("#")) {
+                    e.preventDefault();
+                    navigate({ to: l.to });
+                  }
                 }}
                 className="py-2.5 text-sm font-medium hover:text-foreground text-muted-foreground"
               >
@@ -128,13 +162,32 @@ export function Navbar() {
             <div className="mt-2 border-t pt-3 flex flex-col gap-2">
               {isAuthenticated ? (
                 <>
-                  <Button variant="outline" onClick={() => navigate({ to: "/profile" })}>Profile</Button>
-                  <Button variant="ghost" onClick={() => { logout(); navigate({ to: "/" }); }}>Logout</Button>
+                  <Button variant="outline" onClick={() => navigate({ to: "/profile" })}>
+                    Profile
+                  </Button>
+                  {isAdmin && (
+                    <Button variant="outline" onClick={() => navigate({ to: "/admin" })}>
+                      Admin dashboard
+                    </Button>
+                  )}
+                  <Button
+                    variant="ghost"
+                    onClick={() => {
+                      logout();
+                      navigate({ to: "/" });
+                    }}
+                  >
+                    Logout
+                  </Button>
                 </>
               ) : (
                 <>
-                  <Button variant="outline" asChild><Link to="/login">Login</Link></Button>
-                  <Button asChild><Link to="/register">Register</Link></Button>
+                  <Button variant="outline" asChild>
+                    <Link to="/login">Login</Link>
+                  </Button>
+                  <Button asChild>
+                    <Link to="/register">Register</Link>
+                  </Button>
                 </>
               )}
             </div>

@@ -86,7 +86,8 @@ namespace ECommerce.Infrastructure
             services.AddScoped<IProductService, ProductService>();
             services.AddScoped<IOrderService, OrderService>();
             services.AddScoped<IPaymentService, PaymentService>();
-
+            services.AddScoped<IRatingRepository, RatingRepository>();
+            services.AddScoped<IRatingService, RatingService>();
             return services;
         }
     }

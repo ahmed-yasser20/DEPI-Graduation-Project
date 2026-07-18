@@ -13,5 +13,6 @@ namespace ECommerce.Domain.Entities
         public Category? Category { get; set; }
         public ICollection<Order_Products> OrderProducts { get; set; } = new List<Order_Products>();
         public ICollection<Cart_Items> CartItems { get; set; } = new List<Cart_Items>();
+        public ICollection<Rating> Ratings { get; set; } = new List<Rating>();
     }
 }

@@ -7,15 +7,19 @@ export interface RegisterPayload {
   lastName: string;
   email: string;
   password: string;
-  city?: string;
-  street?: string;
-  building?: string;
+  phone: string;
+  city: string;
+  street: string;
+  building: string;
 }
 
 // Builds a minimal frontend User from whatever the JWT's claims give us.
 // Your AuthController only returns { token }, not a user object, so the
 // user's identity comes entirely from decoding the token client-side.
-function userFromToken(token: string, fallback?: { firstName?: string; lastName?: string; email?: string }) {
+function userFromToken(
+  token: string,
+  fallback?: { firstName?: string; lastName?: string; email?: string },
+) {
   const decoded = decodeJwt(token);
   return {
     id: decoded?.nameIdentifier || decoded?.sub || "",
@@ -44,7 +48,11 @@ export const authService = {
     });
     return {
       token: data.token,
-      user: userFromToken(data.token, { firstName: payload.firstName, lastName: payload.lastName, email: payload.email }),
+      user: userFromToken(data.token, {
+        firstName: payload.firstName,
+        lastName: payload.lastName,
+        email: payload.email,
+      }),
     };
   },
 };

@@ -7,13 +7,16 @@ import { fmt, formatDate } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Loader, EmptyState } from "@/components/Loader";
 import { StatusBadge } from "@/components/StatusBadge";
+import { RatingDialog } from "@/components/RatingDialog";
+import type { FrontendOrder } from "@/services/orderService";
 
 export const Route = createFileRoute("/orders")({ component: OrdersPage });
 
 function OrdersPage() {
   const { isAuthenticated } = useProtected();
   const [page, setPage] = useState(1);
-  const [data, setData] = useState<{ orders: any[]; total: number } | null>(null);
+  const [data, setData] = useState<{ orders: FrontendOrder[]; total: number } | null>(null);
+  const [ratingProduct, setRatingProduct] = useState<{ id: number; name: string } | null>(null);
   const pageSize = 5;
 
   useEffect(() => {
@@ -44,7 +47,9 @@ function OrdersPage() {
                   <div className="flex flex-wrap gap-3 justify-between items-start">
                     <div>
                       <p className="text-xs text-muted-foreground">{o.id}</p>
-                      <p className="mt-1 font-display text-lg font-semibold">{formatDate(o.date)}</p>
+                      <p className="mt-1 font-display text-lg font-semibold">
+                        {formatDate(o.date)}
+                      </p>
                     </div>
                     <div className="text-right">
                       <p className="text-sm text-muted-foreground">Total</p>
@@ -54,6 +59,38 @@ function OrdersPage() {
                   <div className="mt-3">
                     <StatusBadge status={o.status} />
                   </div>
+                  <div className="mt-5 border-t pt-4">
+                    <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">
+                      Order items
+                    </p>
+                    <div className="mt-3 divide-y">
+                      {o.items.map((item) => (
+                        <div
+                          key={`${o.id}-${item.productId}`}
+                          className="flex flex-wrap items-center gap-x-4 gap-y-2 py-3 first:pt-0 last:pb-0"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <p className="font-medium">{item.name}</p>
+                            <p className="mt-0.5 text-sm text-muted-foreground">
+                              {item.quantity} × {fmt(item.unitPrice)}
+                            </p>
+                          </div>
+                          <p className="font-medium">{fmt(item.quantity * item.unitPrice)}</p>
+                          {o.status === "Paid" && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              onClick={() =>
+                                setRatingProduct({ id: item.productId, name: item.name })
+                              }
+                            >
+                              Rate product
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  </div>
                 </div>
               ))}
             </div>
@@ -61,13 +98,33 @@ function OrdersPage() {
 
           {data && totalPages > 1 && (
             <div className="mt-8 flex items-center justify-center gap-2">
-              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage((p) => p - 1)}>Previous</Button>
-              <span className="text-sm text-muted-foreground">Page {page} of {totalPages}</span>
-              <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage((p) => p + 1)}>Next</Button>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === 1}
+                onClick={() => setPage((p) => p - 1)}
+              >
+                Previous
+              </Button>
+              <span className="text-sm text-muted-foreground">
+                Page {page} of {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                disabled={page === totalPages}
+                onClick={() => setPage((p) => p + 1)}
+              >
+                Next
+              </Button>
             </div>
           )}
         </div>
       </div>
+      <RatingDialog
+        product={ratingProduct}
+        onOpenChange={(open) => !open && setRatingProduct(null)}
+      />
     </Layout>
   );
 }

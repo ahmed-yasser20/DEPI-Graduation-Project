@@ -1,0 +1,1 @@
+import{d as e,p as t}from"./index-CooI6wqA.js";function n(e,[t,n]){return Math.min(n,Math.max(t,e))}var r=t(e(),1);function i(e){let t=r.useRef({value:e,previous:e});return r.useMemo(()=>(t.current.value!==e&&(t.current.previous=t.current.value,t.current.value=e),t.current.previous),[e])}export{n,i as t};

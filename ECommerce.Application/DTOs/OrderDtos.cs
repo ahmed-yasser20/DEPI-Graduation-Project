@@ -25,10 +25,19 @@ namespace ECommerce.Application.DTOs
         public string ClientSecret { get; set; } = string.Empty;
     }
 
+    public class CreateCashOnDeliveryOrderResponseDto
+    {
+        public int OId { get; set; }
+    }
+
     public class OrderResponseDto
     {
         public int OId { get; set; }
         public string CId { get; set; } = string.Empty;
+
+        public string CustomerName { get; set; } = string.Empty;
+        public string CustomerEmail { get; set; } = string.Empty;
+
         public string Status { get; set; } = string.Empty;
         public decimal Total_Price { get; set; }
         public DateTime Created_At { get; set; }

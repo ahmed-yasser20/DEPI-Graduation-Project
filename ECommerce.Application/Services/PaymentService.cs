@@ -24,21 +24,7 @@ namespace ECommerce.Application.Services
 
         public async Task<PaymentIntentResponseDto> CreatePaymentIntentAsync(Order order)
         {
-            var options = new PaymentIntentCreateOptions
-            {
-                Amount = (long)(order.Total_Price * 100),
-                Currency = Currency,
-                Metadata = new Dictionary<string, string>
-            {
-                { "order_id", order.OId.ToString() }
-            },
-                AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
-                {
-                    Enabled = true
-                }
-            };
-
-            var intent = await _stripePaymentIntents.CreateAsync(options);
+            var intent = await CreateStripeIntentAsync(order);
 
             var payment = new Payment
             {
@@ -53,18 +39,69 @@ namespace ECommerce.Application.Services
             await _unitOfWork.Payments.AddAsync(payment);
             await _unitOfWork.SaveChangesAsync();
 
-            return new PaymentIntentResponseDto
+            return ToDto(intent, order.Total_Price);
+        }
+
+        public async Task<PaymentIntentResponseDto> RefreshPaymentIntentAsync(Order order, Payment existingPayment)
+        {
+            var intent = await CreateStripeIntentAsync(order);
+
+            existingPayment.StripePaymentIntentId = intent.Id;
+            existingPayment.Status = PaymentStatus.Pending;
+            existingPayment.Payment_Method = string.Empty;
+            existingPayment.FailureReason = null;
+            existingPayment.Paid_At = null;
+
+            await _unitOfWork.SaveChangesAsync();
+
+            return ToDto(intent, order.Total_Price);
+        }
+
+        private async Task<PaymentIntent> CreateStripeIntentAsync(Order order)
+        {
+            var options = new PaymentIntentCreateOptions
             {
-                ClientSecret = intent.ClientSecret,
-                PaymentIntentId = intent.Id,
-                Amount = order.Total_Price
+                Amount = (long)(order.Total_Price * 100),
+                Currency = Currency,
+                Metadata = new Dictionary<string, string>
+                {
+                    { "order_id", order.OId.ToString() }
+                },
+                AutomaticPaymentMethods = new PaymentIntentAutomaticPaymentMethodsOptions
+                {
+                    Enabled = true
+                }
             };
+
+            return await _stripePaymentIntents.CreateAsync(options);
+        }
+
+        private static PaymentIntentResponseDto ToDto(PaymentIntent intent, decimal amount) => new()
+        {
+            ClientSecret = intent.ClientSecret,
+            PaymentIntentId = intent.Id,
+            Amount = amount,
+            Status = intent.Status,
+            PaymentMethodType = intent.PaymentMethodTypes?.FirstOrDefault()
+        };
+
+        public async Task<PaymentIntentResponseDto> GetPaymentIntentAsync(int orderId)
+        {
+            var payment = await _unitOfWork.Payments.GetByOrderIdAsync(orderId)
+                ?? throw new InvalidOperationException("Payment not found.");
+
+            var intent = await _stripePaymentIntents.GetAsync(payment.StripePaymentIntentId);
+            return ToDto(intent, payment.Amount);
         }
 
         public async Task<PaymentResponseDto> MarkAsSucceededAsync(string paymentIntentId, string paymentMethodType)
         {
             var payment = await _unitOfWork.Payments.GetByPaymentIntentIdAsync(paymentIntentId)
                 ?? throw new InvalidOperationException("Payment not found.");
+
+            // Stripe may retry webhook delivery. Do not reduce stock or touch the cart twice.
+            if (payment.Status == PaymentStatus.Succeeded)
+                return MapToDto(payment);
 
             payment.Status = PaymentStatus.Succeeded;
             payment.Payment_Method = paymentMethodType;
@@ -79,6 +116,8 @@ namespace ECommerce.Application.Services
                 {
                     await _unitOfWork.Products.ReduceStockAsync(item.PId, item.Quantity);
                 }
+
+                await RemovePurchasedItemsFromCartAsync(order);
             }
 
             await _unitOfWork.SaveChangesAsync();
@@ -99,6 +138,28 @@ namespace ECommerce.Application.Services
 
             await _unitOfWork.SaveChangesAsync();
             return MapToDto(payment);
+        }
+
+        private async Task RemovePurchasedItemsFromCartAsync(Order order)
+        {
+            foreach (var orderItem in order.OrderProducts)
+            {
+                var cartItem = await _unitOfWork.CartItems
+                    .GetByCartAndProductAsync(order.CId, orderItem.PId);
+
+                if (cartItem is null)
+                    continue;
+
+                if (cartItem.Quantity <= orderItem.Quantity)
+                {
+                    _unitOfWork.CartItems.Delete(cartItem);
+                }
+                else
+                {
+                    cartItem.Quantity -= orderItem.Quantity;
+                    _unitOfWork.CartItems.Update(cartItem);
+                }
+            }
         }
 
         public async Task<PaymentResponseDto?> GetByPaymentIntentIdAsync(string paymentIntentId)

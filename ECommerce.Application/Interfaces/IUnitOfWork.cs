@@ -13,6 +13,7 @@ namespace ECommerce.Application.Interfaces
         ICartItemsRepository CartItems { get; }
         ICustomerRepository Customers { get; }
         IPaymentRepository Payments { get; }
+        IRatingRepository Ratings { get; }
 
         Task<int> SaveChangesAsync();
     }

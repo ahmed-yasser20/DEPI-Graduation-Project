@@ -1,0 +1,1 @@
+import{d as e,i as t,p as n,s as r}from"./index-CooI6wqA.js";var i=n(e(),1);function a(){let{isAuthenticated:e,loading:n}=t(),a=r();return(0,i.useEffect)(()=>{!n&&!e&&a({to:`/login`})},[e,n,a]),{isAuthenticated:e,loading:n}}export{a as t};

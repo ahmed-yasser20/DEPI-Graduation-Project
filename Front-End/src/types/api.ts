@@ -25,6 +25,26 @@ export interface ProductResponse {
   categoryId?: number | null;
   category_Name?: string | null;
   imageUrl?: string | null;
+  averageRating: number;
+  ratingCount: number;
+}
+
+export interface RatingResponse {
+  rId: number;
+  productId: number;
+  customerId: string;
+  customerName: string;
+  value: number;
+  comment?: string | null;
+  createdAt: string;
+  updatedAt?: string | null;
+}
+
+export interface ProductRatingSummaryResponse {
+  productId: number;
+  averageRating: number;
+  ratingCount: number;
+  ratings: RatingResponse[];
 }
 
 export interface CartItemResponse {
@@ -71,6 +91,10 @@ export interface OrderResponse {
 export interface CreateOrderResponse {
   oId: number;
   clientSecret: string;
+}
+
+export interface CreateCashOnDeliveryOrderResponse {
+  oId: number;
 }
 
 export interface AuthResponse {

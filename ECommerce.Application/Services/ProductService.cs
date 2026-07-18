@@ -14,6 +14,7 @@ namespace ECommerce.Application.Services
     {
         private readonly IProductRepository _productRepository;
         private readonly IFileStorageService _fileStorageService;
+        private readonly IRatingRepository _ratingRepository; // NEW
 
         private static readonly HashSet<string> AllowedContentTypes = new(StringComparer.OrdinalIgnoreCase)
         {
@@ -21,16 +22,20 @@ namespace ECommerce.Application.Services
         };
         private const long MaxFileSizeBytes = 5 * 1024 * 1024; // 5MB
 
-        public ProductService(IProductRepository productRepository, IFileStorageService fileStorageService)
+        public ProductService(
+            IProductRepository productRepository,
+            IFileStorageService fileStorageService,
+            IRatingRepository ratingRepository) // NEW
         {
             _productRepository = productRepository;
             _fileStorageService = fileStorageService;
+            _ratingRepository = ratingRepository;
         }
 
         public async Task<IEnumerable<ProductResponseDto>> GetAllAsync()
         {
             var products = await _productRepository.GetAllAsync();
-            return products.Select(MapToDto);
+            return await MapManyToDtoAsync(products);
         }
 
         public async Task<ProductResponseDto> GetByIdAsync(int id)
@@ -39,25 +44,26 @@ namespace ECommerce.Application.Services
             if (product is null)
                 throw new NotFoundException($"Product with ID {id} was not found.");
 
-            return MapToDto(product);
+            var (avg, count) = await _ratingRepository.GetSummaryAsync(id);
+            return MapToDto(product, avg, count);
         }
 
         public async Task<IEnumerable<ProductResponseDto>> GetByCategoryAsync(int categoryId)
         {
             var products = await _productRepository.GetByCategoryAsync(categoryId);
-            return products.Select(MapToDto);
+            return await MapManyToDtoAsync(products);
         }
 
         public async Task<IEnumerable<ProductResponseDto>> GetInStockAsync()
         {
             var products = await _productRepository.GetInStockAsync();
-            return products.Select(MapToDto);
+            return await MapManyToDtoAsync(products);
         }
 
         public async Task<IEnumerable<ProductResponseDto>> SearchByNameAsync(string keyword)
         {
             var products = await _productRepository.SearchByNameAsync(keyword);
-            return products.Select(MapToDto);
+            return await MapManyToDtoAsync(products);
         }
 
         public async Task<ProductResponseDto> CreateAsync(CreateProductDto dto)
@@ -74,7 +80,8 @@ namespace ECommerce.Application.Services
             await _productRepository.AddAsync(product);
             await _productRepository.SaveChangesAsync();
 
-            return MapToDto(product);
+            // brand-new product, no ratings yet
+            return MapToDto(product, 0, 0);
         }
 
         public async Task<ProductResponseDto> UpdateAsync(int id, UpdateProductDto dto)
@@ -92,7 +99,8 @@ namespace ECommerce.Application.Services
             _productRepository.Update(product);
             await _productRepository.SaveChangesAsync();
 
-            return MapToDto(product);
+            var (avg, count) = await _ratingRepository.GetSummaryAsync(id);
+            return MapToDto(product, avg, count);
         }
 
         public async Task DeleteAsync(int id)
@@ -104,6 +112,7 @@ namespace ECommerce.Application.Services
             _productRepository.Delete(product);
             await _productRepository.SaveChangesAsync();
         }
+
         public async Task<ProductResponseDto> UploadImageAsync(int id, Stream fileStream, string fileName, string contentType, long fileLength)
         {
             var product = await _productRepository.GetByIdAsync(id);
@@ -127,11 +136,11 @@ namespace ECommerce.Application.Services
             _productRepository.Update(product);
             await _productRepository.SaveChangesAsync();
 
-            // best-effort cleanup of the old image, after the DB write succeeds
             if (!string.IsNullOrEmpty(oldKey))
                 await _fileStorageService.DeleteAsync(oldKey);
 
-            return MapToDto(product);
+            var (avg, count) = await _ratingRepository.GetSummaryAsync(id);
+            return MapToDto(product, avg, count);
         }
 
         public async Task<ProductResponseDto> DeleteImageAsync(int id)
@@ -148,9 +157,23 @@ namespace ECommerce.Application.Services
                 await _productRepository.SaveChangesAsync();
             }
 
-            return MapToDto(product);
+            var (avg, count) = await _ratingRepository.GetSummaryAsync(id);
+            return MapToDto(product, avg, count);
         }
-        private ProductResponseDto MapToDto(Product product)
+
+        private async Task<IEnumerable<ProductResponseDto>> MapManyToDtoAsync(IEnumerable<Product> products)
+        {
+            var productList = products.ToList();
+            var summaries = await _ratingRepository.GetSummariesAsync(productList.Select(p => p.PId));
+
+            return productList.Select(p =>
+            {
+                var (avg, count) = summaries.TryGetValue(p.PId, out var s) ? s : (0, 0);
+                return MapToDto(p, avg, count);
+            });
+        }
+
+        private ProductResponseDto MapToDto(Product product, double averageRating, int ratingCount)
         {
             return new ProductResponseDto
             {
@@ -161,11 +184,12 @@ namespace ECommerce.Application.Services
                 Stock = product.Stock,
                 CategoryId = product.CategoryId,
                 Category_Name = product.Category?.Category_Name,
+                AverageRating = averageRating,
+                RatingCount = ratingCount,
                 ImageUrl = string.IsNullOrEmpty(product.ImageKey)
                     ? null
                     : _fileStorageService.GetPublicUrl(product.ImageKey)
             };
         }
-
     }
 }

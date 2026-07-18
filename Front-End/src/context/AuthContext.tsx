@@ -19,10 +19,18 @@ interface AuthCtx {
   token: string | null;
   isAuthenticated: boolean;
   loading: boolean;
+  isAdmin: boolean;
   login: (email: string, password: string) => Promise<void>;
   register: (data: RegisterPayload) => Promise<void>;
   logout: () => void;
-  updateProfile: (patch: { firstName?: string; lastName?: string; phone?: string; city?: string; street?: string; building?: string }) => Promise<void>;
+  updateProfile: (patch: {
+    firstName?: string;
+    lastName?: string;
+    phone?: string;
+    city?: string;
+    street?: string;
+    building?: string;
+  }) => Promise<void>;
 }
 
 const AuthContext = createContext<AuthCtx | null>(null);
@@ -65,7 +73,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.removeItem("token");
           localStorage.removeItem("user");
         }
-      } catch {}
+      } catch {
+        // Ignore malformed local storage and proceed as signed out.
+      }
       setLoading(false);
     })();
   }, []);
@@ -82,6 +92,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     token,
     isAuthenticated: !!token,
     loading,
+    isAdmin: (() => {
+      const roles = decodeJwt(token || "")?.role;
+      return (Array.isArray(roles) ? roles : roles ? [roles] : []).some(
+        (role) => role.toLowerCase() === "admin",
+      );
+    })(),
     login: async (email, password) => {
       const { token, user } = await authService.login({ email, password });
       persist(token, user);
@@ -89,6 +105,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     register: async (data) => {
       const { token, user } = await authService.register(data);
       persist(token, user);
+      const updated = await customerService.updateProfile({
+        phoneNumber: data.phone,
+        city: data.city,
+        street: data.street,
+        building: data.building,
+      });
+      setUser((prev) => {
+        if (!prev) return prev;
+        const next: User = {
+          ...prev,
+          phone: updated.phone,
+          city: updated.city,
+          street: updated.street,
+          building: updated.building,
+        };
+        localStorage.setItem("user", JSON.stringify(next));
+        return next;
+      });
     },
     logout: () => {
       localStorage.removeItem("token");

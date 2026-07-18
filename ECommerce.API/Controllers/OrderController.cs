@@ -37,6 +37,23 @@ namespace ECommerce.API.Controllers
             return CreatedAtAction(nameof(GetOrder), new { orderId = result.OId }, result);
         }
 
+        [HttpPost("cash-on-delivery")]
+        public async Task<ActionResult<CreateCashOnDeliveryOrderResponseDto>> CreateCashOnDeliveryOrder(
+            [FromBody] CreateOrderDto dto)
+        {
+            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var result = await _orderService.CreateCashOnDeliveryOrderAsync(customerId, dto);
+            return CreatedAtAction(nameof(GetOrder), new { orderId = result.OId }, result);
+        }
+
+        [HttpPost("from-cart/cash-on-delivery")]
+        public async Task<ActionResult<CreateCashOnDeliveryOrderResponseDto>> CreateCashOnDeliveryOrderFromCart()
+        {
+            var customerId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+            var result = await _orderService.CreateCashOnDeliveryOrderFromCartAsync(customerId);
+            return CreatedAtAction(nameof(GetOrder), new { orderId = result.OId }, result);
+        }
+
         [HttpGet("{orderId}")]
         public async Task<ActionResult<OrderResponseDto>> GetOrder(int orderId)
         {
@@ -70,6 +87,14 @@ namespace ECommerce.API.Controllers
         {
             var orders = await _orderService.GetAllOrdersAsync();
             return Ok(orders);
+        }
+
+        [HttpPatch("{orderId}/mark-paid")]
+        [Authorize(Roles = "Admin")]
+        public async Task<ActionResult<OrderResponseDto>> MarkOrderAsPaid(int orderId)
+        {
+            var result = await _orderService.MarkOrderAsPaidAsync(orderId);
+            return Ok(result);
         }
     }
 }

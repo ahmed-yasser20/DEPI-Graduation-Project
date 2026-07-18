@@ -16,6 +16,8 @@ namespace ECommerce.Application.DTOs
         public int Stock { get; set; }
         public int? CategoryId { get; set; }
         public string? Category_Name { get; set; }
+        public double AverageRating { get; set; }
+        public int RatingCount { get; set; }
         public string? ImageUrl { get; set; }   // NEW - built from ImageKey, not stored
     }
 

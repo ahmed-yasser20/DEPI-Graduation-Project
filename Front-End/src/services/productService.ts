@@ -2,7 +2,8 @@ import { api } from "./api";
 import type { ProductResponse, CategoryResponse } from "@/types/api";
 import type { Product } from "@/components/ProductCard";
 
-const FALLBACK_IMAGE = "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80";
+const FALLBACK_IMAGE =
+  "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=800&q=80";
 
 export function mapProduct(p: ProductResponse): Product {
   return {
@@ -14,6 +15,8 @@ export function mapProduct(p: ProductResponse): Product {
     stock: p.stock,
     image: p.imageUrl || FALLBACK_IMAGE,
     description: p.description || "",
+    averageRating: p.averageRating ?? 0,
+    ratingCount: p.ratingCount ?? 0,
   };
 }
 

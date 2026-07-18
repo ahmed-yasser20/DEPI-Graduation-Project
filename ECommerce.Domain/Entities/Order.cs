@@ -25,7 +25,7 @@ namespace ECommerce.Domain.Entities
         Paid,   
         Failed,
         Processing,
-        Shipped,
+        AwaitingDelivery,
         Delivered,
         Cancelled
     }

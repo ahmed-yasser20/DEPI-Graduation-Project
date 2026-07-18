@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { fmt } from "@/lib/format";
-import { Eye, Plus } from "lucide-react";
+import { Eye, Plus, Star } from "lucide-react";
 
 export interface Product {
   id: string;
@@ -11,6 +11,8 @@ export interface Product {
   stock: number;
   image: string;
   description: string;
+  averageRating: number;
+  ratingCount: number;
 }
 
 export function ProductCard({
@@ -54,13 +56,18 @@ export function ProductCard({
           <p className="font-semibold shrink-0">{fmt(product.price)}</p>
         </div>
         <p className="text-xs text-muted-foreground line-clamp-2">{product.description}</p>
+        <div
+          className="flex items-center gap-1.5 text-xs text-muted-foreground"
+          aria-label={`${product.averageRating.toFixed(1)} out of 5 stars from ${product.ratingCount} ratings`}
+        >
+          <Star className="h-3.5 w-3.5 fill-warning text-warning" />
+          <span className="font-medium text-foreground">
+            {product.ratingCount ? product.averageRating.toFixed(1) : "New"}
+          </span>
+          {product.ratingCount > 0 && <span>({product.ratingCount})</span>}
+        </div>
         <div className="mt-auto pt-3 flex gap-2">
-          <Button
-            size="sm"
-            className="flex-1"
-            disabled={out}
-            onClick={() => onAdd(product)}
-          >
+          <Button size="sm" className="flex-1" disabled={out} onClick={() => onAdd(product)}>
             <Plus className="h-3.5 w-3.5" />
             Add
           </Button>

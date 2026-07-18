@@ -14,6 +14,14 @@ namespace ECommerce.Infrastructure.Repositories
         {
         }
 
+        public new async Task<IEnumerable<Product>> GetAllAsync()
+        {
+            return await _dbSet
+                .AsNoTracking()
+                .Include(p => p.Category)
+                .ToListAsync();
+        }
+
         public async Task<IEnumerable<Product>> GetByCategoryAsync(int categoryId)
         {
             return await _dbSet

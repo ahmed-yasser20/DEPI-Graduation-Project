@@ -1,5 +1,5 @@
 import { api } from "./api";
-import type { OrderResponse, CreateOrderResponse } from "@/types/api";
+import type { OrderResponse, CreateOrderResponse, CreateCashOnDeliveryOrderResponse } from "@/types/api";
 
 export interface FrontendOrder {
   id: string;
@@ -39,6 +39,18 @@ export const orderService = {
 
   async create(items: { productId: number; quantity: number }[]): Promise<CreateOrderResponse> {
     const { data } = await api.post<CreateOrderResponse>("/orders", { items });
+    return data;
+  },
+
+  // The backend exposes cash-on-delivery as its own endpoints rather than a
+  // paymentMethod flag on POST /orders, so these hit those directly.
+  async createCashOnDeliveryFromCart(): Promise<CreateCashOnDeliveryOrderResponse> {
+    const { data } = await api.post<CreateCashOnDeliveryOrderResponse>("/orders/from-cart/cash-on-delivery");
+    return data;
+  },
+
+  async createCashOnDelivery(items: { productId: number; quantity: number }[]): Promise<CreateCashOnDeliveryOrderResponse> {
+    const { data } = await api.post<CreateCashOnDeliveryOrderResponse>("/orders/cash-on-delivery", { items });
     return data;
   },
 

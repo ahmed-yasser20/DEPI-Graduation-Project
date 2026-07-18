@@ -8,9 +8,11 @@ namespace ECommerce.Application.Interfaces
     public interface IPaymentService
     {
         Task<PaymentIntentResponseDto> CreatePaymentIntentAsync(Order order);
+        Task<PaymentIntentResponseDto> GetPaymentIntentAsync(int orderId);
         Task<PaymentResponseDto> MarkAsSucceededAsync(string paymentIntentId, string paymentMethodType);
         Task<PaymentResponseDto> MarkAsFailedAsync(string paymentIntentId, string failureReason);
         Task<PaymentResponseDto?> GetByPaymentIntentIdAsync(string paymentIntentId);
         Task<PaymentResponseDto?> GetByOrderIdAsync(int orderId);
+        Task<PaymentIntentResponseDto> RefreshPaymentIntentAsync(Order order, Payment existingPayment);
     }
 }

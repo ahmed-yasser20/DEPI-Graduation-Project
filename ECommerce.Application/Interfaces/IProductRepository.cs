@@ -9,6 +9,7 @@ namespace ECommerce.Application.Interfaces
 {
     public interface IProductRepository : IGenericRepository<Product>
     {
+        new Task<IEnumerable<Product>> GetAllAsync();
         Task<IEnumerable<Product>> GetByCategoryAsync(int categoryId);
         Task<IEnumerable<Product>> GetInStockAsync();
         Task<IEnumerable<Product>> SearchByNameAsync(string keyword);

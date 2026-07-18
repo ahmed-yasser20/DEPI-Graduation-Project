@@ -12,5 +12,6 @@ namespace ECommerce.Application.Interfaces
         Task<Order?> GetWithDetailsAsync(int orderId);
         Task<IEnumerable<Order>> GetByCustomerAsync(string customerId);
         Task<IEnumerable<Order>> GetAllWithDetailsAsync();
+        Task<IEnumerable<Order>> GetUnpaidWithDetailsByCustomerAsync(string customerId);
     }
 }

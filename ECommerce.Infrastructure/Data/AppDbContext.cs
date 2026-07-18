@@ -20,6 +20,7 @@ namespace ECommerce.Infrastructure.Data
         public DbSet<Order_Products> OrderProducts { get; set; }
         public DbSet<Shopping_Cart> ShoppingCarts { get; set; }
         public DbSet<Cart_Items> CartItems { get; set; }
+        public DbSet<Rating> Ratings { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
